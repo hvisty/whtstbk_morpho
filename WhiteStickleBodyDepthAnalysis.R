@@ -1,6 +1,6 @@
 ##Initial White Stickleback analysis and graphs##
 
-setwd("/Users/Hannah/Documents/Schluter Lab Work")
+
 data<-read.csv("EastCoastMorphometrics2015.csv")
 data<-as.data.frame(data) #it was displaying as a function instead of a data frame?
 class(data)
