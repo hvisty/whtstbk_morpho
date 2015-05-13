@@ -2,7 +2,7 @@
 
 ##Mixed model analysis for significant difference in spine length, control for body size
 
-setwd("/Users/Hannah/Documents/Schluter Lab Work")
+
 
 #test 2 
 
