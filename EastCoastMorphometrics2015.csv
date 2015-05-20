@@ -1,4 +1,4 @@
-population,individual,sex,species,photo.id,std.length.raw,depth.spine.1,depth.spine.2,spine.length.1,spine.length.2,spine.length.3,spine.length.pelvic,correction,std.length,depth.1,depth.2,spine.1,spine.2,spine.3,spine.pelvic,notes,x.1,x.2,x.3,x.4,x.5,x.6,x.7,x.8,x.9,x.10,x.11,x.12,x.13,x.14,x.15,x.16,x.17,x.18,x.19,y.1,y.2,y.3,y.4,y.5,y.6,y.7,y.8,y.9,y.10,y.11,y.12,y.13,y.14,y.15,y.16,y.17,y.18,y.19
+population,individual,sex,species,photo.id,std.length.raw,depth.spine.1,depth.spine.2,spine.length.1,spine.length.2,spine.length.3,spine.length.pelvic,correction,std.length,depth.1,depth.2,spine.1,spine.2,spine.3,spine.pelvic,notes
 AL-S-2014,1,,C,10,1980.184,474.009,465.01,184.835,224.179,0,312.519,387.105,5.12,1.22,1.2,0.4774802702,0.579,0,0.8073235944,"e.g. no head, very bent, not a threespine, etc."
 AL-S-2014,2,,C,11,1827.121,468.087,453.486,199.449,230.825,56.604,306.94,390.104,4.68,1.2,1.16,0.5112713533,0.592,0.1450997683,0.7868158235,
 AL-S-2014,3,,C,12,2020.874,483.335,471.239,193.215,214.663,76.837,252.642,390.012,5.18,1.24,1.21,0.4954078336,0.55,0.1970118868,0.6477800683,
