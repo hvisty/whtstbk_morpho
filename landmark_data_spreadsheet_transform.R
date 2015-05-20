@@ -111,7 +111,7 @@ data <- data[,c(1:58, 60:97, 59 )]
 write.csv(data, "EastCoastMorphometrics2015.csv")
 
 
-landmark.fixed <- data[,c(1, 2, 4, 60:97)]
+landmark.fixed <- data[,c(1, 2, 4, 59:96)]
 
 write.csv(landmark.fixed, "Corrected Landmark Data.csv")
 
