@@ -37,7 +37,7 @@ PCA<- plotTangentSpace(GPA.landmarks$coords, groups= landmarks$population, verbo
 PCA$pc.scores #gives the PCA scores
 
 #unbending; just show me PC2 vs PC3
-plotTangentSpace(GPA.landmarks$coords, groups=landmarks$species, axis1=2, axis2=3)
+plotTangentSpace(GPA.landmarks$coords, groups=landmarks$species, axis1=1, axis2=2)
 
 #make a prettier plot! 
 PC.scores<-as.data.frame(PCA$pc.scores)
@@ -88,3 +88,17 @@ lda.project %>%
     geom_point(size = 3) +
     labs(x = paste0("LD1 (", prop.lda[1], "%)"),
          y = paste0("LD2 (", prop.lda[2], "%)"))
+
+# so what do the lda axes mean?
+
+# the loadings of the axes
+lda.species$scaling
+
+# make a data frame with their original names (x.1, y.1 ,etc.)
+landmark.names <- names(landmarks)[-c(1:4)][-39]
+
+data.frame(lm.name = landmark.names, 
+           ld1.loading = lda.species$scaling[,1],
+           ld2.loading = lda.species$scaling[,2])
+
+
