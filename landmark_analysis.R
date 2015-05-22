@@ -28,10 +28,21 @@ landmarks.data <- landmarks[, c(5:42)]
 
 landmark.array <- arrayspecs(landmarks.data, 19, 2) #3D array
 
-GPA.landmarks<-gpagen(landmark.array) #Procrustes analysis
+GPA.landmarks <- gpagen(landmark.array) #Procrustes analysis
 
-GPA.2D<-two.d.array(GPA.landmarks$coords) #2D Data frame of procrustes coordinates
+GPA.2D <- two.d.array(GPA.landmarks$coords) #2D Data frame of procrustes coordinates
 
+# extract centroids
+landmark.centroids <- data.frame(population = landmarks$population, 
+                                 id = landmarks$ID, 
+                                 species = landmarks$species, 
+                                 centroid = GPA.landmarks$Csize)
+# plot centroid sizes
+landmark.centroids %>%
+  ggplot(aes(x = population, y = centroid, color=species)) +
+    geom_boxplot()+
+    facet_grid(~ species, scale = "free", space = "free")
+  
 #principle component stuff. 
 PCA<- plotTangentSpace(GPA.landmarks$coords, groups= landmarks$population, verbose=T)
 PCA$pc.scores #gives the PCA scores
@@ -97,8 +108,9 @@ lda.species$scaling
 # make a data frame with their original names (x.1, y.1 ,etc.)
 landmark.names <- names(landmarks)[-c(1:4)][-39]
 
-data.frame(lm.name = landmark.names, 
+lm.loadings <- data.frame(lm.name = landmark.names, 
            ld1.loading = lda.species$scaling[,1],
            ld2.loading = lda.species$scaling[,2])
 
+head(lm.loadings)
 
