@@ -127,12 +127,21 @@ cluster.dat.reduced <- cluster.dat %>%
 landmark.centroids.rename <- landmark.centroids
 landmark.centroids.rename$id <- landmark.centroids$id %>% gsub("2014","",.) %>% gsub("_","",.)
 
+# read in sex data
+
+sex.dat <- read.csv(file=list.files(pattern="sex",full.names = TRUE), stringsAsFactors = FALSE, na.strings = "")
+names(sex.dat) <- c("population","id","sex")
+sex.dat$id <- sex.dat$id %>% gsub("2014","",.) 
+sex.dat$population <- sex.dat$population %>% gsub("2014","",.) 
+sex.dat$id <- paste0(sex.dat$population,sex.dat$id)
+
 cluster.morph <- left_join(cluster.dat.reduced, landmark.centroids.rename)
+cluster.morph <- left_join(cluster.morph, sex.dat)
 
 cluster.morph  %>%
   filter(!is.na(population)) %>%
   ggplot(aes(x = population, y = centroid, color=factor(membership))) +
   geom_point(size=3)+
-  facet_grid(~ species, scale = "free", space = "free")
+  facet_grid(sex~ species, scale = "free", space = "free")
 
 
