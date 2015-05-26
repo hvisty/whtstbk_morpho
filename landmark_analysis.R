@@ -10,6 +10,7 @@ library("ggplot2")
 library("candisc") # will use this later
 library("MASS")
 library("dplyr")
+library("cats")
 
 landmarks <- read.csv("Corrected Landmark Data.csv")
 
@@ -31,17 +32,6 @@ landmark.array <- arrayspecs(landmarks.data, 19, 2) #3D array
 GPA.landmarks <- gpagen(landmark.array) #Procrustes analysis
 
 GPA.2D <- two.d.array(GPA.landmarks$coords) #2D Data frame of procrustes coordinates
-
-# extract centroids
-landmark.centroids <- data.frame(population = landmarks$population, 
-                                 id = landmarks$ID, 
-                                 species = landmarks$species, 
-                                 centroid = GPA.landmarks$Csize)
-# plot centroid sizes
-landmark.centroids %>%
-  ggplot(aes(x = population, y = centroid, color=species)) +
-    geom_boxplot()+
-    facet_grid(~ species, scale = "free", space = "free")
   
 #principle component stuff. 
 PCA<- plotTangentSpace(GPA.landmarks$coords, groups= landmarks$population, verbose=T)
@@ -52,7 +42,7 @@ plotTangentSpace(GPA.landmarks$coords, groups=landmarks$species, axis1=1, axis2=
 
 #make a prettier plot! 
 PC.scores<-as.data.frame(PCA$pc.scores)
-ggplot(PC.scores, aes(x=PC2, y=PC3, color=landmarks$species)) + geom_point(size=3) 
+ggplot(PC.scores, aes(x=PC3, y=PC4, color=landmarks$species)) + geom_point(size=3) 
 
 ggplot(PC.scores, aes(x=PC5, y=PC6, color=landmarks$species)) + geom_point(size=3) 
 #...nothin to show for shape differences. Dang. 
@@ -113,4 +103,36 @@ lm.loadings <- data.frame(lm.name = landmark.names,
            ld2.loading = lda.species$scaling[,2])
 
 head(lm.loadings)
+
+######## GENETICS VS. MORPHOLOGY ########
+
+# extract centroids
+landmark.centroids <- data.frame(population = landmarks$population, 
+                                 id = landmarks$ID, 
+                                 species = landmarks$species, 
+                                 centroid = GPA.landmarks$Csize)
+# plot centroid sizes
+landmark.centroids %>%
+  ggplot(aes(x = population, y = centroid, color=species)) +
+  geom_point()+
+  facet_grid(~ species, scale = "free", space = "free")
+
+#read in genetic cluster data
+
+cluster.dat <- read.table(file=list.files(pattern="structure",full.names = TRUE), stringsAsFactors = FALSE)
+cluster.dat.reduced <- cluster.dat %>%
+  filter(k.value.run == 2) %>%
+  select(id,X1,X2,membership)
+
+landmark.centroids.rename <- landmark.centroids
+landmark.centroids.rename$id <- landmark.centroids$id %>% gsub("2014","",.) %>% gsub("_","",.)
+
+cluster.morph <- left_join(cluster.dat.reduced, landmark.centroids.rename)
+
+cluster.morph  %>%
+  filter(!is.na(population)) %>%
+  ggplot(aes(x = population, y = centroid, color=factor(membership))) +
+  geom_point(size=3)+
+  facet_grid(~ species, scale = "free", space = "free")
+
 
