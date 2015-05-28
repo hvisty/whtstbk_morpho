@@ -7,6 +7,7 @@ install.packages("candisc")
 
 library("geomorph")
 library("ggplot2")
+library("ggthemes")
 library("candisc") # will use this later
 library("MASS")
 library("dplyr")
@@ -38,13 +39,24 @@ PCA<- plotTangentSpace(GPA.landmarks$coords, groups= landmarks$population, verbo
 PCA$pc.scores #gives the PCA scores
 
 #unbending; just show me PC2 vs PC3
-plotTangentSpace(GPA.landmarks$coords, groups=landmarks$species, axis1=1, axis2=2)
+col.gpa <- rainbow(length(levels(landmarks$species)))
+names(col.gpa) <- levels(landmarks$species)
+col.gpa <- col.gpa[match(landmarks$species, names(col.gpa))]
+
+plotTangentSpace(GPA.landmarks$coords, groups=landmarks$ID, axis1=1, axis2=2)
+plotTangentSpace(GPA.landmarks$coords, groups=col.gpa, axis1=2, axis2=3)
+plotTangentSpace(GPA.landmarks$coords, groups=col.gpa, axis1=3, axis2=4)
+
 
 #make a prettier plot! 
 PC.scores<-as.data.frame(PCA$pc.scores)
-ggplot(PC.scores, aes(x=PC3, y=PC4, color=landmarks$species)) + geom_point(size=3) 
+
+ggplot(PC.scores, aes(x=PC2, y=PC3, color=landmarks$species, label=landmarks$ID))+ 
+  geom_point() +
+  geom_text()
 
 ggplot(PC.scores, aes(x=PC5, y=PC6, color=landmarks$species)) + geom_point(size=3) 
+
 #...nothin to show for shape differences. Dang. 
 
 #MANOVA 
@@ -88,7 +100,12 @@ lda.project %>%
   ggplot(aes(color = species, x = ld1,y = ld2))+
     geom_point(size = 3) +
     labs(x = paste0("LD1 (", prop.lda[1], "%)"),
-         y = paste0("LD2 (", prop.lda[2], "%)"))
+         y = paste0("LD2 (", prop.lda[2], "%)")) +
+  theme_classic() +
+  guides(color=guide_legend(title="Species")) +
+  scale_colour_manual(values=c("firebrick1", "cornflower blue"))+
+  theme(axis.text=element_text(size=20), axis.title=element_text(size=22), 
+        legend.text=element_text(size=20), legend.title=element_text(size=20))
 
 # so what do the lda axes mean?
 
@@ -114,7 +131,13 @@ landmark.centroids <- data.frame(population = landmarks$population,
 # plot centroid sizes
 landmark.centroids %>%
   ggplot(aes(x = population, y = centroid, color=species)) +
-  geom_point()+
+  geom_boxplot()+ xlab("Population") +ylab("Centroid") +
+  scale_colour_manual(values=c("darkorchid4", "firebrick1", "cornflower blue")) +
+  theme_classic() +
+  guides(color=guide_legend(title="Species")) +
+  theme(axis.text=element_text(size=20), axis.text.x = element_text(angle=90, vjust=1),
+        axis.title=element_text(size=22), strip.text=element_text(size=20), 
+        legend.text=element_text(size=20), legend.title=element_text(size=20))+
   facet_grid(~ species, scale = "free", space = "free")
 
 #read in genetic cluster data
@@ -142,6 +165,12 @@ cluster.morph  %>%
   filter(!is.na(population)) %>%
   ggplot(aes(x = population, y = centroid, color=factor(membership))) +
   geom_point(size=3)+
-  facet_grid(sex~ species, scale = "free", space = "free")
+  theme_classic() +
+  theme(axis.text=element_text(size=20), axis.text.x = element_text(angle=90, vjust=1),
+        axis.title=element_text(size=22), strip.text=element_text(size=20), 
+        legend.text=element_text(size=20), legend.title=element_text(size=20))+
+  guides(color=guide_legend(title="Species")) +
+  scale_colour_manual(values=c("firebrick1", "cornflower blue")) +
+  facet_grid(~species, scale = "free", space = "free")
 
 

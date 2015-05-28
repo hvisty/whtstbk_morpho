@@ -9,6 +9,7 @@ install.packages("MASS")
 install.packages("candisc")
 install.packages("devtools")
 
+
 # google sheets API
 library(devtools)
 devtools::install_github("jennybc/googlesheets")
@@ -34,11 +35,11 @@ gs_ls()
 
 ## load in sheet from google sheets
 morphodat.gs <- gs_title("East Coast Morphometrics - 2015")
-morphodat <- data.frame(get_via_csv(landmarks.gs))
+morphodat <- data.frame(get_via_csv(morphodat.gs))
 
 
 ## write csv to file (for working offline)
-# write.csv(morphodat, file="east_coast_morphometrics_2015.csv")
+write.csv(morphodat, file="east_coast_morphometrics_2015.csv")
 # morphodat <- read.csv("east_coast_morphometrics_2015.csv")
 
 # build 'corrected' landmark file
@@ -50,7 +51,7 @@ landmarks.full <- morphodat %>%
   filter(!is.na(lndmrk.x1))
 
 ## extract ids
-landmark.ids <- landmarks.full %>%
+landmarks.ids <- landmarks.full %>%
   select(population, individual, sex, species)
 
 ## fix names
