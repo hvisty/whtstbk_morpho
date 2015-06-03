@@ -83,8 +83,48 @@ prop.lda <- round(prop.lda*100)
 # data frame of projected data with species names
 lda.project <- data.frame(species = landmarks$species, 
                           population = landmarks$population, 
+                          individual = landmarks$individual,
+                          ID = landmarks$ID,
                           ld1 = plda$x[,1], 
-                          ld2 = plda$x[,2])
+                          ld2 = plda$x[,2], 
+                          X = landmarks$X)
+########
+##use this data frame to look at lda values versus original x/y
+
+lda.xy <- merge(lda.project, landmarks, by=c("population", "individual", "species", "ID", "X"))
+lda.xy <- subset(lda.xy, select=-c(X)) 
+
+#create a linear regression coefficient for each x:ld1 and y:ld2
+lda.lm<-data.frame(matrix(NA, nrow = nrow(lda.xy) , ncol = length(PC.scores)))
+colnames(lda.lm)<-c("LMx.1","LMx.2","LMx.3","LMx.4","LMx.5","LMx.6","LMx.7","LMx.8",
+                    "LMx.9","LMx.10","LMx.11","LMx.12","LMx.13","LMx.14","LMx.15",
+                    "LMx.16","LMx.17","LMx.18","LMx.19",
+                    "LMy.1","LMy.2","LMy.3","LMy.4","LMy.5","LMy.6","LMy.7","LMy.8",
+                    "LMy.9","LMy.10","LMy.11","LMy.12","LMy.13","LMy.14","LMy.15",
+                    "LMy.16","LMy.17","LMy.18","LMy.19")
+ld1 <- lda.xy$ld1
+ld2 <- lda.xy$ld2
+
+#separate loops for X and Y cause my looping skillz are weak
+
+for (l in 1:19){
+  pie <- as.matrix(lda.xy[paste("x", l, sep=".")])
+    for(i in 1:length(pie)){ 
+      lm.1<-lm(ld1 ~ pie)
+      lda.lm[,l] <- lm.1$fitted.values
+  }
+}
+
+for (l in 1:19){
+  cake <- as.matrix(lda.xy[paste("y", l, sep=".")])
+  for(i in 1:length(cake)){ 
+    lm.2<-lm(ld2 ~ cake)
+    lda.lm[,(l+19)] <- lm.2$fitted.values
+  }
+}
+
+
+#######
 
 # plot with ggplot
 lda.project %>%
@@ -107,7 +147,15 @@ lda.project %>%
   theme(axis.text=element_text(size=20), axis.title=element_text(size=22), 
         legend.text=element_text(size=20), legend.title=element_text(size=20))
 
+
+
+
+
+
+
+####working on getting lda values
 # so what do the lda axes mean?
+
 
 # the loadings of the axes
 lda.species$scaling
