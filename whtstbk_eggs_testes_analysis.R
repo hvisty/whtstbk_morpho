@@ -150,6 +150,7 @@ testedat$variance <- abs((testedat[,6]*testedat[,8]) - (testedat[,7]*testedat[,9
 
 library("ggplot2")
 
+#size
 ggplot(testedat, aes(x=std.length, y=avg.size, color=factor(membership))) +
   geom_point(na.rm=T) +
   stat_smooth(method=lm, na.rm=T) +
@@ -160,7 +161,10 @@ ggplot(testedat, aes(x=std.length, y=avg.size, color=factor(membership))) +
   theme_classic() +
   scale_colour_manual(values=c("firebrick1", "cornflower blue"))
 
-ggplot(testedat, aes(x=std.length, y=avg.weight, color=factor(membership))) +
+#weight
+testedat %>%
+  filter(avg.weight<1) %>%
+ggplot(aes(x=std.length, y=avg.weight, color=factor(membership))) +
   geom_point(na.rm=T) +
   stat_smooth(method=lm, na.rm=T) +
   labs(
@@ -170,9 +174,41 @@ ggplot(testedat, aes(x=std.length, y=avg.weight, color=factor(membership))) +
   theme_classic() +
   scale_colour_manual(values=c("firebrick1", "cornflower blue"))
 
+
+##checking other patterns and relationships between variables 
+
+#variance in size
 ggplot(testedat, aes(x=std.length, y=variance, color=factor(membership))) +
   geom_point(na.rm=T) +
   stat_smooth(method=lm, na.rm=T)
+
+#size vs weight relationship
+ggplot(testedat, aes(x=avg.weight, y=avg.size, color=factor(membership))) +
+  geom_point(na.rm=T) +
+   stat_smooth(method=lm, na.rm=T) +
+  labs(
+    x = "Avg. teste weight",
+    y = "Avg. teste size (length*width)",
+    color = "Membership") +
+  theme_classic() +
+  scale_colour_manual(values=c("firebrick1", "cornflower blue"))
+
+#different way of calculating average size...  
+
+testedat$avg.size.2 = (((testedat[,6]) *(testedat[,8])) +
+                        ((testedat[,7])*(testedat[,9])))/2
+
+  #size 2
+ggplot(testedat, aes(x=std.length, y=avg.size.2, color=factor(membership))) +
+  geom_point(na.rm=T) +
+  stat_smooth(method=lm, na.rm=T) +
+  labs(
+    x = "Standard Length",
+    y = "Avg. teste size (length*width)",
+    color = "Membership") +
+  theme_classic() +
+  scale_colour_manual(values=c("firebrick1", "cornflower blue"))
+
 
 
 #boxplots: size and weight differences
@@ -232,4 +268,15 @@ anova(teste.weight.test)  # type I anova
   #fit linear model anova
 teste.weight.anova<-aov(testedat$avg.weight ~ testedat$membership)
 summary(teste.weight.anova)
+
+
+
+
+##get other teste data: filter by populations which have been sequenced & SL 4-5cm
+
+data<-read.csv("east_coast_morphometrics_2015.csv")
+filtered.data<-filter(data, sequenced.==1)
+filtered.data<-filter(filtered.data, species!='B')
+filtered.data<-filter(filtered.data, sex=='M')
+filtered.data<-filter(filtered.data, std.length>4 & std.length<5)
 

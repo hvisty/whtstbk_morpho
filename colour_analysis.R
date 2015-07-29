@@ -32,11 +32,7 @@ for (i in 1:length(color.data.files)){
 color.data.frame$ID <- list.files("color data")
 color.data.frame$ID <- gsub("Histogram of", "", color.data.frame$ID)
 color.data.frame$ID <- gsub(".csv", "", color.data.frame$ID)
-
-color.data.frame$population <- 
-  as.character(lapply(strsplit(color.data.frame$ID, split="_"), "[", 1))
-color.data.frame$individual <- 
-  as.character(lapply(strsplit(color.data.frame$ID, split="_"), "[", 2))
+color.data.frame$ID <- gsub(" ","", color.data.frame$ID)
 
 
 nameR <- paste("R", 0:255, sep="_")
@@ -49,17 +45,23 @@ nameB <- paste("B", 0:255, sep="_")
 colnames(color.data.frame)[513:768] <- nameB
 
 
-#master.data.frame<-read.csv("east_coast_morphometrics_2015.csv")
-#master.data.frame$ID<- paste(master.data.frame$population, master.data.frame$individual, sep="_")
-#master.data.frame$species<- as.character(master.data.frame$species)
-#master.data.frame$population<- as.character(master.data.frame$population)
-#master.data.frame$individual<- as.character(master.data.frame$individual)
+master.data.frame<-read.csv("east_coast_morphometrics_2015.csv")
+master.data.frame$ID<- paste(master.data.frame$population, master.data.frame$individual, sep="_")
 
-color.data.frame$species <- c(rep('C',17), rep('B', 44), rep('C', 142), rep('B', 62), rep('C', 36), rep('B', 188), rep('C',111),
+master.data.frame<-master.data.frame[,c('population', 'individual', 'species', 'std.length', 'ID')]
+
+color.data.frame<-color.data.frame[order(color.data.frame$ID),]
+master.data.frame<-master.data.frame[order(master.data.frame$ID),]
+
+full.color.data<-left_join(color.data.frame, master.data.frame, by='ID')
+full.color.data <- subset(full.color.data, !duplicated(full.color.data[,'ID'])) 
+
+
+#color.data.frame$species <- c(rep('C',17), rep('B', 44), rep('C', 142), rep('B', 62), rep('C', 36), rep('B', 188), rep('C',111),
              rep('W', 46), rep('C',30), rep('B',91), rep('W',179), rep('C', 67), rep('B', 196), rep('W', 22))
 
 
-write.csv(color.data.frame, file="whtstbk_color_data.csv", row.names=FALSE)
+write.csv(full.color.data, file="whtstbk_color_data.csv", row.names=FALSE)
 
 ######## end of preliminary ########
 
@@ -180,7 +182,9 @@ B.dat$species <- colordat$species
 B.dat$population <- colordat$population
 Bpop.means<-aggregate(B.dat$mean, by=c(colordat_population, colordat_species), FUN="mean")
 
-ggplot(Bpop.means, aes(x= population, y= x, color=factor(species))) +
+Bpop.means %>%
+  
+ggplot(Bpop.means, aes(x= reorder(population, as.numeric(species), mean), y= x, color=factor(species))) +
   geom_point(aes(size=3)) +
   labs(
     x = "Population",
@@ -291,4 +295,134 @@ Brightness.anova<-aov(brightness.avg$x ~ brightness.avg$species)
 summary(Brightness.anova) #F=6.202, p>.00802
 TukeyHSD(Brightness.anova) #W-B has p>.006 but neither are different from C 
 
+
+
+
+
+#### Analysis with conversion to HSV color scale ####
+
+install.packages("grDevices") 
+library("grDevices")
+
+#convert RGB to HSV data frame
+
+HSV.dat<-t(rgb2hsv(r=R.dat$mean, g=G.dat$mean, b=B.dat$mean))
+HSV.dat<-as.data.frame(HSV.dat)
+
+HSV.dat$species <- colordat$species
+HSV.dat$population <- colordat$population
+HSV.dat$ID<-colordat$ID
+
+
+#get population means for Hue, Saturation, and Value 
+
+H.pop.means<-aggregate(HSV.dat$h, by=c(colordat_population, colordat_species), FUN="mean")
+
+S.pop.means<-aggregate(HSV.dat$s, by=c(colordat_population, colordat_species), FUN="mean")
+
+V.pop.means<-aggregate(HSV.dat$v, by=c(colordat_population, colordat_species), FUN="mean")
+
+## plot population means for HSV 
+
+#Hue
+ggplot(H.pop.means, aes(x= factor(population), y= H.pop.means$x, color=factor(species))) +
+  geom_point(aes(size=3)) +
+  labs(
+    x = "Population",
+    y = "Avg. Hue ",
+    color = "Species") +
+  theme_classic() +
+  scale_colour_manual(values=c("darkorchid4", "firebrick1", "cornflower blue")) +
+  theme(axis.text.x = element_text(angle=90, vjust=1))
+
+#Saturation
+ggplot(S.pop.means, aes(x= factor(population), y= S.pop.means$x, color=factor(species))) +
+  geom_point(aes(size=3)) +
+  labs(
+    x = "Population",
+    y = "Avg. Saturation ",
+    color = "Species") +
+  theme_classic() +
+  scale_colour_manual(values=c("darkorchid4", "firebrick1", "cornflower blue")) +
+  theme(axis.text.x = element_text(angle=90, vjust=1))
+
+#Value (Brightness)
+ggplot(V.pop.means, aes(x= factor(population), y= V.pop.means$x, color=factor(species))) +
+  geom_point(aes(size=3)) +
+  labs(
+    x = "Population",
+    y = "Avg. Value (Brightness) ",
+    color = "Species") +
+  theme_classic() +
+  scale_colour_manual(values=c("darkorchid4", "firebrick1", "cornflower blue")) +
+  theme(axis.text.x = element_text(angle=90, vjust=1))
+
+#Value Boxplot
+ggplot(HSV.dat, aes(x= species, y= v, color=factor(species))) +
+  geom_boxplot() +
+  labs(
+    x = "Species",
+    y = "Value (Brightness)",
+    color = "Species") +
+  theme_classic() +
+  scale_colour_manual(values=c("darkorchid4", "firebrick1", "cornflower blue"))
+
+##How does brightness value compare to body size (as proxy for species ID)?
+
+HSV.dat$std.length<-colordat$std.length
+
+HSV.dat%>%
+  filter(species!='B')%>%
+ggplot(aes(x=std.length, y=v, color=factor(species))) + 
+  geom_point(size=3) +
+  geom_text(aes(label=ID)) +
+  labs(
+    x = "Standard Length",
+    y = "Value (Brightness)",
+    color = "Species") +
+  theme_classic() +
+  scale_colour_manual(values=c("darkorchid4", "firebrick1", "cornflower blue"))
+
+
+
+##Using only individuals which have genetic membership
+
+#read in membership IDs and join with HSV data 
+get.gene.dat<-read.csv("eggs_testes_data.csv")
+
+get.gene.dat<-subset(get.gene.dat, sequenced.!='NA')
+
+get.gene.dat$ID<-as.character(paste(get.gene.dat$population, get.gene.dat$individual, sep="_"))
+get.gene.dat<-get.gene.dat[,c('ID', 'membership', 'sex')]
+
+genetic.HSV.dat<-left_join(get.gene.dat, HSV.dat, by='ID')
+
+#plot Std. Length by brightness 
+
+male.dat<-filter(genetic.HSV.dat, sex!='M')
+
+ggplot(male.dat,aes(x=std.length, y=v, color=factor(membership))) + 
+  geom_point(na.rm=T) +
+  geom_text(aes(label=ID), na.rm=T) +
+  #stat_smooth(method=lm, na.rm=T) +
+  labs(
+    x = "Standard Length",
+    y = "Value (Brightness)",
+    color = "Membership") +
+  theme_classic() +
+  scale_colour_manual(values=c("firebrick1", "cornflower blue"))
+  
+
+
+##Pattern by date of photo? 
+
+date<-read.csv("Schluterlab_photoDSCcodes.csv")
+date$ID<-paste(date$populatio, date$individual, sep="_")
+date$Folder<-as.factor(date$Folder)
+
+HSV.date<-left_join(HSV.dat, date, by='ID')
+HSV.date <- subset(HSV.date, !duplicated(HSV.date[,'ID'])) 
+
+ggplot(HSV.date, aes(x=Folder, y=v), color=factor(species))+
+  geom_point(na.rm=T)
 
