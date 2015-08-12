@@ -41,12 +41,14 @@ morphodat <- data.frame(get_via_csv(morphodat.gs))
 
 ## write csv to file (for working offline)
 write.csv(morphodat, file="east_coast_morphometrics_2015.csv")
-# morphodat <- read.csv("east_coast_morphometrics_2015.csv")
+morphodat <- read.csv("east_coast_morphometrics_2015.csv")
 
 # build 'corrected' landmark file
 # pop, id, sex, species, x.1,y.1,x.2,y.2, etc.
 
 ## select landmark columns, remove nas
+select<-dplyr::select #allows select to be used while MASS and dplyr are both loaded
+
 landmarks.full <- morphodat %>%
   select(population, individual, sex, species, correction, contains("lndmrk")) %>%
   filter(!is.na(lndmrk.x1))
@@ -118,6 +120,7 @@ landmarks <- merge(landmarks.outliers, PC.scores, by=c("ID"))
 landmarks <- landmarks[!duplicated(landmarks[,"ID"]),] #duplicated IDs upon merging..
 landmarks <- subset(landmarks, select=-c(PC1:PC38))
 
+write.csv(landmarks, "corrected_landmark_data.csv")
 
 #NOW start real analysis
 
@@ -169,13 +172,13 @@ lda.species <- lda(GPA.2D, landmarks$species) #what does this mean?
 # the default plot, looks meh
 plot(lda.species)
 
-# project the original values in lda space
-plda <- predict(object = lda.species,
-                newdata = GPA.2D)
-
 # the percent of variance explained by the LD funcitons
 prop.lda <- lda.species$svd^2/sum(lda.species$svd^2) 
 prop.lda <- round(prop.lda*100)
+
+# project the original values in lda space
+plda <- predict(object = lda.species,
+                newdata = GPA.2D)
 
 # data frame of projected data with species names
 lda.project <- data.frame(species = landmarks$species, 
@@ -191,7 +194,8 @@ lda.project %>%
   ggplot(aes(color = species, x = ld1,y = ld2))+
   geom_point(size = 3) +
   labs(x = paste0("LD1 (", prop.lda[1], "%)"),
-       y = paste0("LD2 (", prop.lda[2], "%)"))
+       y = paste0("LD2 (", prop.lda[2], "%)")) 
+  
 
 
 # the loadings of the LDA axes
@@ -209,8 +213,9 @@ head(lm.loadings)
 
 ####REGRESSION WORK####
 
-##make a data frame to look at lda values versus procrustes x/y
+## make a data frame to look at lda values versus procrustes x/y
 
+# Procrustes x/y
 GPA <- as.data.frame(GPA.2D)
 GPA.X <- GPA[,seq(from=1, to=38, by=2)] #data was in x,y not x(1:19)...
 GPA.X$ID <- lda.project$ID
@@ -222,38 +227,40 @@ names(GPA)[c(2:39)] <- c("X1","X2","X3","X4","X5","X6","X7","X8","X9","X10",
                          "Y1","Y2","Y3","Y4","Y5","Y6","Y7","Y8","Y9","Y10",
                          "Y11","Y12","Y13","Y14","Y15","Y16","Y17","Y18","Y19")
 
+# merge with LDA x/y data frame
 lda.xy <- merge(lda.project, GPA, by="ID")
 
 
-#create a linear regression coefficient vector for each 1-19 x:ld1 and y:ld2
+# Create a data frame with a vector for each linear regression 
+#   coefficient 1-19 x:ld1 and y:ld2
+
 lda.lm<-data.frame(matrix(NA, nrow = nrow(lda.xy) , ncol = length(PC.scores)))
 colnames(lda.lm)<-c("LMx.1","LMx.2","LMx.3","LMx.4","LMx.5","LMx.6","LMx.7","LMx.8",
                     "LMx.9","LMx.10","LMx.11","LMx.12","LMx.13","LMx.14","LMx.15",
                     "LMx.16","LMx.17","LMx.18","LMx.19",
                     "LMy.1","LMy.2","LMy.3","LMy.4","LMy.5","LMy.6","LMy.7","LMy.8",
                     "LMy.9","LMy.10","LMy.11","LMy.12","LMy.13","LMy.14","LMy.15",
-                    "LMy.16","LMy.17","LMy.18","LMy.19", "species")
+                    "LMy.16","LMy.17","LMy.18","LMy.19")
 lda.lm$species <- lda.xy$species
 ld1 <- lda.xy$ld1
 ld2 <- lda.xy$ld2
 
-# loop the regressions. Separate for X and Y cause my looping skillz are weak
+# loop the regressions for X and Y 
 
-for (l in 1:19){
-  pie <- as.matrix(lda.xy[paste("X", l, sep="")])
+for (i in 1:19){
+  pie <- as.matrix(lda.xy[paste("X", i, sep="")])
     lm.1<-lm(ld1 ~ pie)
-    lda.lm[,l] <- lm.1$fitted.values
+    lda.lm[,i] <- lm.1$fitted.values
 }
 
-for (l in 1:19){
-  cake <- as.matrix(lda.xy[paste("Y", l, sep="")])
+for (i in 1:19){
+  cake <- as.matrix(lda.xy[paste("Y", i, sep="")])
     lm.2<-lm(ld2 ~ cake)
-    lda.lm[,(l+19)] <- lm.2$fitted.values
+    lda.lm[,(i+19)] <- lm.2$fitted.values
 }
 
-plot(ld1 ~ lda.lm$LMx.4)
 
-#now, get the LM averages and combine with the avg procrustes values.... 
+# Now, get the LM averages and combine with the avg procrustes values.... 
 
 library(reshape2)
 
@@ -461,7 +468,8 @@ ggplot(lda.project.CV1, aes(x = LD1, colour = species))+
 landmark.centroids <- data.frame(population = landmarks$population, 
                                  id = landmarks$ID, 
                                  species = landmarks$species, 
-                                 centroid = GPA.landmarks$Csize)
+                                 centroid = GPA.landmarks$Csize,
+                                 sex= landmarks$sex)
 # plot centroid sizes
 landmark.centroids %>%
   ggplot(aes(x = population, y = centroid, color=species)) +
@@ -483,7 +491,7 @@ cluster.morph <- left_join(cluster.dat.reduced, landmark.centroids.rename)
 cluster.morph  %>%
   filter(!is.na(population)) %>%
   ggplot(aes(x = population, y = centroid, color=factor(membership))) +
-  geom_point(size=3)+
-  facet_grid(~ species, scale = "free", space = "free")
+  geom_point(size=3) +
+  facet_grid(~ sex, scale = "free", space = "free")
 
 

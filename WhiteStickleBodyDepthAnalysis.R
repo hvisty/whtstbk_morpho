@@ -56,8 +56,10 @@ BDVW + geom_violin() #cool because BOTH shows bimodal distribution, others not s
 popsummary<-aggregate(SL, by=list(population), FUN='mean')
 names(popsummary)[names(popsummary)=="Group.1"]<-"Population"
 names(popsummary)[names(popsummary)=="x"]<-"Avg.SL"
+
 depth.means<-aggregate(depth.1, by=list(population), FUN="mean")
 popsummary[,"Avg.depth"]<-depth.means$x
+
 species.agg<-aggregate(species, by=list(population), FUN="unique")
 popsummary[,"Species"]<-species.agg$x
 popsummary<-popsummary[c(1,4,2,3)]
@@ -65,7 +67,7 @@ View(popsummary) #woot woot
 
 #one way ANOVA: mean by population Standard Length for White/Common/Both
 SLANOVA.AVGS<-aov(popsummary$Avg.SL~popsummary$Species)
-summary(SLANOVA.AVGS) #F=0.156, p>0.856, DF=2
+summary(SLANOVA.AVGS)
 
 #one way ANOVA: mean by pop. Body Depth for White/Common/Both
 BDANOVA.AVGS<-aov(popsummary$Avg.depth~popsummary$Species)

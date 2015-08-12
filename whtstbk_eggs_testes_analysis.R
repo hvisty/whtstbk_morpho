@@ -38,7 +38,7 @@ eggdat<-subset(eggdat, select= -c(teste.length.1, teste.length.2,
 testedat<-subset(gonad.dat, teste.length.1!='NA' & membership !='NA' & std.length !='NA')
 testedat<-subset(testedat, select= -c(egg.diameter.1, egg.diameter.2, egg.diameter.3,
                 egg.diameter.4, egg.diameter.5, egg.diameter.6, egg.diameter.7,
-                egg.diameter.8, egg.diameter.9, egg.diameter.10))
+                egg.diameter.8, egg.diameter.9, egg.diameter.10, egg.number))
 
 
 ##get average weight and size for eggs##
