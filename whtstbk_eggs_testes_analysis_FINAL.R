@@ -152,6 +152,13 @@ summary(egg.weight.test)
 anova(egg.weight.test) # type I anova                         
 
 
+# mixed model for egg number
+egg.number.test<-lme(egg.number ~ std.length * membership, data=eggdat, 
+                     random= ~1|population, na.action=na.omit) 
+summary(egg.number.test) 
+
+anova(egg.number.test) # type I anova 
+
 
 ## Testes Analysis ##
 
